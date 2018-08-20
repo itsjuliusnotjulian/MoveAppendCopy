@@ -330,7 +330,6 @@ def main():
     import sys
     #   ## For Debug Only
     #   start = time()
-    #   start = time()
     #   output = "Desktop/Python_Jupyter"
     #   source = "Desktop/Jupyter_Notebook"
     #   partial_name = ""
