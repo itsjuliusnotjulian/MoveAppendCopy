@@ -2,9 +2,9 @@
 
 ########################################################################################
 __author__ = "Julius Ramos"
-__copyright__ = "Copyright 08/19/2018; The Move, Append, and Copy (MAC) Utility Project"
+__copyright__ = "Copyright 08/20/2018; The Move, Append, and Copy (MAC) Utility Project"
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.2.0"
 __maintainer__ = "Julius Ramos"
 __status__ = "Development"
 ########################################################################################
@@ -20,9 +20,88 @@ from os.path import expanduser
 
 
 ########################################################################################
-# Class MoveAppendCopy
+# Class SearchDirectory
 ########################################################################################
 
+class SearchDirectory(object):
+    """This class is used as a decorator to recursively search through a source directory and its subdirectories.
+       Otherwise, it'll execute the original function argument.
+
+    """
+    
+    def __init__(self, original_func):
+        self.original_func = original_func
+
+    def _is_sub_directory(self, path=""):
+        """This private method is used to check to if a path is a directory or a file.
+        Args:
+            path (str): The full directory path.
+        Returns:
+            result (bool): True if directory; else False.
+
+        """
+        result = os.path.isdir(path)
+        return result
+
+    def _is_file(self, path=""):
+        """This private method is used to check to if a path is a file or a directory.
+        Args:
+            path (str): The full file path.
+        Returns:
+            result (bool): True if file; else False.
+
+        """
+        result = os.path.isfile(path)
+        return result
+
+    def __call__(self, *args):
+        """ This function call operator.
+        Args:
+            original_func (method): The operation to execute which can be either move, append, or copy.
+                *args (tuple): A tuple containing information for the original function to process.
+                    source_dir (str): The full source path to operate a file from.
+                    destination_dir (str): The full directory path to operate a file into.
+                    names_to_look (str): The name of the file(s) to search for including the partial filename and ext.
+                    search_all_within (bool): True to search subdirectories; otherwise, False.
+                    output_file (str): The output file to append data into.
+        Returns:
+            status (int): 0 if passed; -1 if failed.
+        """
+        source_dir = args[0][0]
+        destination_dir = args[0][1]
+        names_to_look = args[0][2]
+        search_all_within = args[0][3]
+        output_file = args[0][4]
+
+        # Obtain all files containing the partial name and/or extension from the source dir
+        all_files = glob.glob1("{}/".format(source_dir), names_to_look)
+
+        # Obtain all contents of the current source dir including other directories
+        all_contents = os.listdir(source_dir)
+
+        try:
+            # Search through all directories inside the source for the file types to move
+            for contents in all_contents:
+                path = os.path.abspath("{}/{}".format(source_dir, contents))
+                basename = os.path.basename(path)
+                data = (path, destination_dir, names_to_look, search_all_within, output_file)
+                if self._is_sub_directory(path) and search_all_within:
+                    # recursively call back the decorator to dig deeper
+                    self.__call__(data)
+                elif self._is_file(path) and (basename in all_files):
+                    # otherwise, execute the operation
+                    self.original_func(self, data)
+            else:
+                status = 0
+        except Exception as err:
+            status = -1
+            # print("Error: {}".format(err))  # Debug
+        return status
+
+
+########################################################################################
+# Class MoveAppendCopy
+########################################################################################
 
 class MoveAppendCopy(object):
     """The MoveAppendCopy class is a simple collection of methods that can be used for either moving,
@@ -77,33 +156,16 @@ class MoveAppendCopy(object):
             self.names_to_look = "*.{}".format(self.extension)
             self.output_file = "{}/OutputFile_{}.{}".format(self.output_dir, timestamp, self.extension)
 
-    def _is_sub_directory(self, path=""):
-        """This private method is used to check to if a path is a directory or a file.
-        Args:
-            path (str): The full directory path.
-        Returns:
-            result (bool): True if directory; else False.
-
-        """
-        result = os.path.isdir(path)
-        return result
-
-    def _is_file(self, path=""):
-        """This private method is used to check to if a path is a file or a directory.
-        Args:
-            path (str): The full file path.
-        Returns:
-            result (bool): True if file; else False.
-
-        """
-        result = os.path.isfile(path)
-        return result
-
-    def _move_file(self, src="", dst=""):
+    @SearchDirectory
+    def _move_file(self, data):
         """This private method is used to move one file from a source path to a output directory.
         Args:
-            src (str): The full source path to move a file from.
-            dst (str): The full directory path to move a file into.
+            data (tuple): A tuple containing information for the original function to process.
+                source_dir (str): The full source path to operate a file from.
+                destination_dir (str): The full directory path to operate a file into.
+                names_to_look (str): The name of the file(s) to search for including the partial filename and ext.
+                search_all_within (bool): True to search subdirectories; otherwise, False.
+                output_file (str): The output file to append data into.
         Returns:
             status (int): 0 if passed; -1 if failed.
         Example:
@@ -111,8 +173,11 @@ class MoveAppendCopy(object):
             status = test._move_file(src, dst)
 
         """
+        source_dir = data[0]
+        destination_dir = data[1]
+
         try:
-            shutil.move(src, dst)
+            shutil.move(source_dir, destination_dir)
             status = 0
         except Exception as err:
             status = -1
@@ -120,11 +185,17 @@ class MoveAppendCopy(object):
 
         return status
 
-    def _append_file(self, path=""):
+    @SearchDirectory
+    def _append_file(self, data):
         """This private method is used to append the contents of user-defined files from a source path into an
            output file.
         Args:
-            path (str): The full file path of the file to append into an output file.
+            data (tuple): A tuple containing information for the original function to process.
+                source_dir (str): The full source path to operate a file from.
+                destination_dir (str): The full directory path to operate a file into.
+                names_to_look (str): The name of the file(s) to search for including the partial filename and ext.
+                search_all_within (bool): True to search subdirectories; otherwise, False.
+                output_file (str): The output file to append data into.
         Returns:
             status (int): 0 if passed; -1 if failed.
         Example:
@@ -132,11 +203,14 @@ class MoveAppendCopy(object):
             status = test._append_file(path)
 
         """
+        source_dir = data[0]
+        output_file = data[4]
+
         try:
-            with open(path, 'r') as newfile:
+            with open(source_dir, 'r') as newfile:
                 text = newfile.readlines()
                 try:
-                    with open(self.output_file, 'a') as myfile:
+                    with open(output_file, 'a') as myfile:
                         myfile.writelines(text)
                         # Ensure a newline is created after every appended file
                         myfile.write("\n")
@@ -151,11 +225,16 @@ class MoveAppendCopy(object):
 
         return status
 
-    def _copy_file(self, src="", dst=""):
+    @SearchDirectory
+    def _copy_file(self, data):
         """This private method is used to copy one file from a source path to a output directory.
         Args:
-            src (str): The full source path to move a file from.
-            dst (str): The full directory path to move a file into.
+             data (tuple): A tuple containing information for the original function to process.
+                source_dir (str): The full source path to operate a file from.
+                destination_dir (str): The full directory path to operate a file into.
+                names_to_look (str): The name of the file(s) to search for including the partial filename and ext.
+                search_all_within (bool): True to search subdirectories; otherwise, False.
+                output_file (str): The output file to append data into.
         Returns:
             status (int): 0 if passed; -1 if failed.
         Example:
@@ -163,138 +242,15 @@ class MoveAppendCopy(object):
             status = test._copy_file(src, dst)
 
         """
+        source_dir = data[0]
+        destination_dir = data[1]
+
         try:
-            shutil.copy2(src, dst)
+            shutil.copy2(source_dir, destination_dir)
             status = 0
         except Exception as err:
             status = -1
             # print("Error: {}".format(err))  # Debug
-
-        return status
-
-    def move_all_to_dir(self, source_dir=""):
-        """This method is used to move all the user-defined file types from a source directory into an
-           output directory.
-        Args:
-            source_dir (str): The full file path of the file to move into the output directory.
-        Returns:
-            status (int): 0 if passed; -1 if failed.
-        Example:
-            test = MoveAppendCopy(src, dst, partial_name, ext)
-            status = test.move_all_to_dir(source_dir)
-
-        """
-        if source_dir:
-            source_dir = source_dir
-        else:
-            source_dir = self.source_dir
-
-        # Obtain all files containing the partial name and/or extension from the source dir
-        all_files = glob.glob1("{}/".format(source_dir), self.names_to_look)
-
-        # Obtain all contents of the current source dir including other directories
-        all_contents = os.listdir(source_dir)
-
-        try:
-            # Search through all directories inside the source for the file types to move
-            for contents in all_contents:
-                path = os.path.abspath("{}/{}".format(source_dir, contents))
-                basename = os.path.basename(path)
-                if self._is_sub_directory(path) and self.search_all_within:
-                    self.move_all_to_dir(path)
-                elif self._is_file(path) and (basename in all_files):
-                    self._move_file(path, self.output_dir)
-            else:
-                # Successfully moved all files to the output directory
-                status = 0
-
-        except Exception as err:
-            status = -1
-            print("Error: {}".format(err))  # Debug
-
-        return status
-
-    def append_all_to_file(self, source_dir=""):
-        """The method is used to append contents all the user-defined file types from a source directory into
-           an output file.
-        Args:
-            source_dir (str): The full file path of the file to append to the output file.
-        Returns:
-            status (int): 0 if passed; -1 if failed.
-        Example:
-            test = MoveAppendCopy(src, dst, partial_name, ext)
-            status = test.append_all_to_file(source_dir)
-
-        """
-        if source_dir:
-            source_dir = source_dir
-        else:
-            source_dir = self.source_dir
-
-        # Obtain all files containing the partial name and/or extension from the source dir
-        all_files = glob.glob1("{}/".format(source_dir), self.names_to_look)
-
-        # Obtain all contents of the current source dir including other directories
-        all_contents = os.listdir(source_dir)
-
-        try:
-            # Search through all directories inside the source for the file types to append
-            for contents in all_contents:
-                path = os.path.abspath("{}/{}/".format(source_dir, contents))
-                basename = os.path.basename(path)
-                if self._is_sub_directory(path) and self.search_all_within:
-                    self.append_all_to_file(path)
-                elif self._is_file(path) and (basename in all_files):
-                    self._append_file(path)
-            else:
-                # Successfully appended all source files to an output file
-                status = 0
-
-        except Exception as err:
-            status = -1
-            # print("Error: {}".format(err))  # Debug
-
-        return status
-
-    def copy_all_to_dir(self, source_dir=""):
-        """The method is used to copy all the user-defined file types from a source directory into an
-           output directory.
-        Args:
-            source_dir (str): The full file path of the file to copy into the output directory.
-        Returns:
-            status (int): 0 if passed; -1 if failed.
-        Example:
-            test = MoveAppendCopy(src, dst, partial_name, ext)
-            status = test.copy_all_to_dir(source_dir)
-
-        """
-        if source_dir:
-            source_dir = source_dir
-        else:
-            source_dir = self.source_dir
-
-        # Obtain all files containing the partial name and/or extension from the source dir
-        all_files = glob.glob1("{}/".format(source_dir), self.names_to_look)
-
-        # Obtain all contents of the current source dir including other directories
-        all_contents = os.listdir(source_dir)
-
-        try:
-            # Search through all directories inside the source for the file types to copy
-            for contents in all_contents:
-                path = os.path.abspath("{}/{}/".format(source_dir, contents))
-                basename = os.path.basename(path)
-                if self._is_sub_directory(path) and self.search_all_within:
-                    self.copy_all_to_dir(path)
-                elif self._is_file(path) and (basename in all_files):
-                    self._copy_file(path, self.output_dir)
-            else:
-                # Successfully copied all source files to an output directory
-                status = 0
-
-        except Exception as err:
-            status = -1
-            # print("Error: {}".format(err))
 
         return status
 
@@ -311,13 +267,16 @@ class MoveAppendCopy(object):
 
         """
         try:
+            # Create a tuple of the arguments to insure transfer of all the arguments
+            data = (self.source_dir, self.output_dir, self.names_to_look, self.search_all_within, self.output_file)
+
             # The user-defined option will be executed
             if self.option == 1:
-                status = self.move_all_to_dir(self.source_dir)
+                status = self._move_file(data)
             elif self.option == 2:
-                status = self.append_all_to_file(self.source_dir)
+                status = self._append_file(data)
             else:
-                status = self.copy_all_to_dir(self.source_dir)
+                status = self._copy_file(data)
 
         except Exception as err:
             status = -1
@@ -328,20 +287,21 @@ class MoveAppendCopy(object):
 
 def main():
     import sys
-    #   ## For Debug Only
-    #   start = time()
-    #   output = "Desktop/Python_Jupyter"
-    #   source = "Desktop/Jupyter_Notebook"
-    #   partial_name = ""
-    #   ext = "ipynb"
-    #   search_all = True
-    #   opt = "move"
-    #   test = MoveAppendCopy(source, output, partial_name, ext, search_all, opt)
-    #   #print(test.append_all_to_file())
-    #   #print(test.move_all_to_dir())
-    #   print(test.select_option())
-    #   elapsed_time = time() - start
-    #   print("Elapsed time in seconds: {}s".format(elapsed_time))
+
+    # ## For Debug Only
+    # start = time()
+    # output = "Desktop/Python_Jupyter"
+    # source = "Desktop/Jupyter_Notebook"
+    # partial_name = ""
+    # ext = "ipynb"
+    # search_all = True
+    # opt = "move"
+    # test = MoveAppendCopy(source, output, partial_name, ext, search_all, opt)
+    # #print(test.append_all_to_file())
+    # #print(test.move_all_to_dir())
+    # print(test.select_option())
+    # elapsed_time = time() - start
+    # print("Elapsed time in seconds: {}s".format(elapsed_time))
 
     start = time()
     source = sys.argv[1]
@@ -350,7 +310,7 @@ def main():
     ext = sys.argv[4]
     search_all = sys.argv[5]
     opt = sys.argv[6]
-
+    
     test = MoveAppendCopy(source, output, partial_name, ext, search_all, opt)
     print(test.select_option())
     elapsed_time = time() - start
