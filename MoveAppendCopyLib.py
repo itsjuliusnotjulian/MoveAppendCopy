@@ -41,7 +41,7 @@ class MoveAppendCopy(object):
         # Specifying the source directory
         if MoveAppendCopy.home not in src_dir_name:
             self.source_dir = os.path.abspath("{}/{}/".format(MoveAppendCopy.home, src_dir_name))
-        elif not source_dir_name:
+        elif not src_dir_name:
             self.source_dir = MoveAppendCopy.home
         else:
             self.source_dir = os.path.abspath(src_dir_name)
@@ -49,7 +49,7 @@ class MoveAppendCopy(object):
         # Specifying the destination directory
         if MoveAppendCopy.home not in out_dir_name:
             self.output_dir = os.path.abspath("{}/{}/".format(MoveAppendCopy.home, out_dir_name))
-        elif not output_dir_name:
+        elif not out_dir_name:
             self.output_dir = MoveAppendCopy.home
         else:
             self.output_dir = os.path.abspath(out_dir_name)
