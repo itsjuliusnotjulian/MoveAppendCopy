@@ -9,7 +9,7 @@
 __author__ = "Julius Ramos"
 __copyright__ = "Copyright 08/19/2018; The Move, Append, and Copy (MAC) Utility Project"
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Julius Ramos"
 __email__ = "juliusramos918@gmail.com"
 __status__ = "Development"
@@ -27,8 +27,9 @@ import wx.xrc
 class MacFrame(wx.Frame):
 
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, id=wx.ID_ANY, title=u"Move, Append, Copy Utility (MAC)", pos=wx.DefaultPosition,
-                          size=wx.Size(562, 290), style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
+        wx.Frame.__init__(self, parent, id=wx.ID_ANY, title=u"Move, Append, Copy Utility (MAC)",
+                          pos=wx.DefaultPosition, size=wx.Size(562, 290),
+                          style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
 
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
 
@@ -43,7 +44,8 @@ class MacFrame(wx.Frame):
                                              wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
         bSizer1.Add(self.SelectSrcDir, 0, wx.EXPAND | wx.TOP | wx.BOTTOM | wx.RIGHT, 5)
 
-        self.DestinationLabel = wx.StaticText(self, wx.ID_ANY, u"Destination:", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.DestinationLabel = wx.StaticText(self, wx.ID_ANY, u"Destination:", wx.DefaultPosition, wx.DefaultSize,
+                                              0)
         self.DestinationLabel.Wrap(-1)
         bSizer1.Add(self.DestinationLabel, 0, wx.ALL, 5)
 
@@ -58,7 +60,8 @@ class MacFrame(wx.Frame):
 
         bSizer4 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_staticText4 = wx.StaticText(self, wx.ID_ANY, u"File Extension:", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_staticText4 = wx.StaticText(self, wx.ID_ANY, u"File Extension:", wx.DefaultPosition, wx.DefaultSize,
+                                           0)
         self.m_staticText4.Wrap(-1)
         bSizer4.Add(self.m_staticText4, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -82,13 +85,13 @@ class MacFrame(wx.Frame):
         self.m_staticText3.Wrap(-1)
         bSizer2.Add(self.m_staticText3, 1, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND, 5)
 
-        self.SelectMove = wx.CheckBox(self, wx.ID_ANY, u"Move", wx.DefaultPosition, wx.DefaultSize, 0)
-        bSizer2.Add(self.SelectMove, 1, wx.ALL | wx.EXPAND | wx.ALIGN_RIGHT, 5)
+        self.SelectMove = wx.RadioButton(self, wx.ID_ANY, u"Move", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer2.Add(self.SelectMove, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.SelectAppend = wx.CheckBox(self, wx.ID_ANY, u"Append", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.SelectAppend = wx.RadioButton(self, wx.ID_ANY, u"Append", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer2.Add(self.SelectAppend, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.SelectCopy = wx.CheckBox(self, wx.ID_ANY, u"Copy", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.SelectCopy = wx.RadioButton(self, wx.ID_ANY, u"Copy", wx.DefaultPosition, wx.DefaultSize, 0)
         self.SelectCopy.SetValue(True)
         bSizer2.Add(self.SelectCopy, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -132,9 +135,9 @@ class MacFrame(wx.Frame):
         self.SelectFileExt.Bind(wx.EVT_TEXT_ENTER, self.update_user_options)
         self.PartialName.Bind(wx.EVT_TEXT, self.update_user_options)
         self.PartialName.Bind(wx.EVT_TEXT_ENTER, self.update_user_options)
-        self.SelectMove.Bind(wx.EVT_CHECKBOX, self.update_user_options)
-        self.SelectAppend.Bind(wx.EVT_CHECKBOX, self.update_user_options)
-        self.SelectCopy.Bind(wx.EVT_CHECKBOX, self.update_user_options)
+        self.SelectMove.Bind(wx.EVT_RADIOBUTTON, self.update_user_options)
+        self.SelectAppend.Bind(wx.EVT_RADIOBUTTON, self.update_user_options)
+        self.SelectCopy.Bind(wx.EVT_RADIOBUTTON, self.update_user_options)
         self.SearchAll.Bind(wx.EVT_CHECKBOX, self.update_user_options)
         self.StartButton.Bind(wx.EVT_BUTTON, self.start_process)
 
@@ -159,4 +162,3 @@ if __name__ == "__main__":
     frame = MacFrame(None) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
-
