@@ -4,7 +4,7 @@
 __author__ = "Julius Ramos"
 __copyright__ = "Copyright 08/20/2018; The Move, Append, and Copy (MAC) Utility Project"
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Julius Ramos"
 __status__ = "Development"
 ########################################################################################
@@ -13,7 +13,7 @@ import wx
 import wx.xrc
 import threading
 from MacFrame import MacFrame
-from MoveAppendCopyLib import MoveAppendCopy
+from MoveAppendCopyLib_v2 import MoveAppendCopy
 from datetime import datetime
 
 
@@ -28,7 +28,7 @@ class MacUtility(MacFrame):
         self.output = self.SelectDstDir.GetPath()
         self.partial_name = self.PartialName.GetValue()
         self.ext = self.SelectFileExt.GetValue()
-        self.search_all = self.SearchAll.IsChecked()
+        self.search_all = self.SearchAll.IsEnabled()
         self.opt = "copy"
         self.mac = MoveAppendCopy(self.source, self.output, self.partial_name, self.ext, self.search_all, self.opt)
 
@@ -42,32 +42,22 @@ class MacUtility(MacFrame):
         self.output = self.SelectDstDir.GetPath()
         self.partial_name = self.PartialName.GetValue()
         self.ext = self.SelectFileExt.GetValue()
-        self.search_all = self.SearchAll.IsChecked()
+        self.search_all = self.SearchAll.IsEnabled()
 
-        if not self.SelectMove.IsChecked() and not self.SelectAppend.IsChecked():
+        # Ensure that only one operation is set
+        if not self.SelectMove.IsEnabled() and not self.SelectAppend.IsEnabled():
             self.SelectCopy.SetValue(True)
             self.SelectCopy.Update()
-        elif self.SelectMove.IsChecked() or self.SelectAppend.IsChecked():
-            if self.SelectCopy.IsChecked():
-                self.SelectCopy.SetValue(False)
-            self.SelectCopy.Update()
-            
-        if not self.SelectAppend.IsChecked() and not self.SelectCopy.IsChecked():
+
+        if not self.SelectAppend.IsEnabled() and not self.SelectCopy.IsEnabled():
             self.SelectMove.SetValue(True)
             self.SelectMove.Update()
-        elif self.SelectAppend.IsChecked() or self.SelectCopy.IsChecked():
-            if self.SelectMove.IsChecked():
-                self.SelectMove.SetValue(False)
-            self.SelectMove.Update()
 
-        if not self.SelectMove.IsChecked() and not self.SelectCopy.IsChecked():
+        if not self.SelectMove.IsEnabled() and not self.SelectCopy.IsEnabled():
             self.SelectAppend.SetValue(True)
             self.SelectAppend.Update()
-        elif self.SelectMove.IsChecked() or self.SelectCopy.IsChecked():
-            if self.SelectAppend.IsChecked():
-                self.SelectAppend.SetValue(False)
-            self.SelectAppend.Update()
 
+        # Default operation is "copy"
         if self.SelectMove.GetValue():
             self.opt = "move"
         elif self.SelectAppend.GetValue():
