@@ -4,7 +4,7 @@
 __author__ = "Julius Ramos"
 __copyright__ = "Copyright 08/20/2018; The Move, Append, and Copy (MAC) Utility Project"
 __license__ = "GPL"
-__version__ = "1.0.2"
+__version__ = "1.0.4"
 __maintainer__ = "Julius Ramos"
 __status__ = "Development"
 ########################################################################################
@@ -68,6 +68,7 @@ class MacUtility(MacFrame):
             self.opt = "copy"
 
         self.Update()
+        del self.mac  # Remove reference to previous MAC object before creating a new one
         self.mac = MoveAppendCopy(self.source, self.output, self.partial_name, self.ext, self.search_all, self.opt)
 
     def start_process(self, event):
@@ -75,7 +76,7 @@ class MacUtility(MacFrame):
             status = -1
             while status:
                 self.StatusIndicator.SetBackgroundColour((255, 255, 0))  # YELLOW
-                self.StatusIndicator.SetValue("SEARCHING")
+                self.StatusIndicator.SetValue("WORKING")
                 status = self.mac.select_option()
                 if not status:
                     self.StatusIndicator.SetBackgroundColour((255, 0, 0))  # RED
