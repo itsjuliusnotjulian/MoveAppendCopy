@@ -13,7 +13,7 @@ import wx
 import wx.xrc
 import threading
 from MacFrame import MacFrame
-from MoveAppendCopyLib_v2 import MoveAppendCopy
+from MoveAppendCopyLib import MoveAppendCopy
 from datetime import datetime
 
 
